@@ -61,7 +61,7 @@ class Flow(chainer.Chain):
         out = x
 
         if reduce_memory:
-            out, logdet = cf.forget(forward_closure(self.actnorm), out)
+            out, logdet = cf.forget(self.actnorm.forward_step, out)
         else:
             out, logdet = self.actnorm.forward_step(out)
         sum_logdet += logdet
@@ -70,7 +70,7 @@ class Flow(chainer.Chain):
         sum_logdet += logdet
 
         if reduce_memory:
-            out, logdet = cf.forget(forward_closure(self.coupling_layer), out)
+            out, logdet = cf.forget(self.coupling_layer.forward_step, out)
         else:
             out, logdet = self.coupling_layer.forward_step(out)
         sum_logdet += logdet
@@ -183,7 +183,7 @@ class Glow(chainer.ChainList):
         self.blocks = []
         self.need_initialize = True
 
-        channels_x = 3  # RGB
+        channels_x = 1  # grayscale
 
         for level in range(hyperparams.levels):
             if level == 0:
@@ -265,6 +265,15 @@ class Glow(chainer.ChainList):
                 zi, z = split_channel(z)
                 factorized_z.append(zi)
         return factorized_z
+
+    # return z of same shape as x
+    def merge_factorized_z(self, factorized_z, factor=2):
+        z = None
+        for zi in reversed(factorized_z):
+            xp = cuda.get_array_module(zi.data)
+            z = zi.data if z is None else xp.concatenate((zi.data, z), axis=1)
+            z = glow.nn.functions.unsqueeze(z, factor, xp)
+        return z
 
     def reverse_step(self, z):
         assert self.is_reverse_mode is True

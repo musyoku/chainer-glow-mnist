@@ -49,19 +49,19 @@ def main():
     if using_gpu:
         encoder.to_gpu()
 
-    with encoder.reverse() as decoder:
+    with chainer.no_backprop_mode() and encoder.reverse() as decoder:
         while True:
             z = xp.random.normal(
                 0, args.temperature, size=(
                     1,
-                    3,
+                    1,
                 ) + hyperparams.image_size).astype("float32")
 
-            with chainer.no_backprop_mode():
-                x, _ = decoder.reverse_step(z)
-                x_img = make_uint8(x.data[0], num_bins_x)
-                plt.imshow(x_img, interpolation="none")
-                plt.pause(.01)
+            x, _ = decoder.reverse_step(z)
+            x_img = make_uint8(x.data[0], num_bins_x)
+            x_img = np.broadcast_to(x_img, (28, 28, 3))
+            plt.imshow(x_img, interpolation="none")
+            plt.pause(.01)
 
 
 if __name__ == "__main__":

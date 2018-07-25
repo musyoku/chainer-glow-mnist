@@ -54,16 +54,6 @@ def printr(string):
     sys.stdout.write("\r")
 
 
-# return z of same shape as x
-def merge_factorized_z(factorized_z, factor=2):
-    z = None
-    for zi in reversed(factorized_z):
-        xp = cuda.get_array_module(zi.data)
-        z = zi.data if z is None else xp.concatenate((zi.data, z), axis=1)
-        z = glow.nn.functions.unsqueeze(z, factor, xp)
-    return z
-
-
 def preprocess(image, num_bits_x):
     num_bins_x = 2**num_bits_x
     if num_bits_x < 8:
@@ -96,7 +86,6 @@ def main():
 
     images = chainer.datasets.mnist.get_mnist(withlabel=False)[0]
     images = 255.0 * np.asarray(images).reshape((-1, ) + image_size + (1, ))
-    images = np.broadcast_to(images, (images.shape[0], ) + image_size + (3, ))
     images = preprocess(images, args.num_bits_x)
 
     x_mean = np.mean(images)
@@ -138,6 +127,9 @@ def main():
     current_training_step = 0
     num_pixels = 3 * hyperparams.image_size[0] * hyperparams.image_size[1]
 
+    # for key, variable in encoder.namedparams():
+    #     print(key, xp.mean(variable.data), xp.var(variable.data))
+
     # Training loop
     for iteration in range(args.total_iteration):
         sum_loss = 0
@@ -176,9 +168,6 @@ def main():
                     denom,
                     float(logdet.data) / denom))
 
-            if batch_index % 100 == 0:
-                encoder.save(args.snapshot_path)
-
         # Check model reversibility
         with chainer.no_backprop_mode() and encoder.reverse() as decoder:
             factorized_z_distribution, logdet = encoder.forward_step(x)
@@ -190,7 +179,8 @@ def main():
             rev_x_mean = float(xp.mean(rev_x.data))
             rev_x_var = float(xp.var(rev_x.data))
 
-            z = merge_factorized_z(factorized_z)
+            z = encoder.merge_factorized_z(
+                factorized_z, factor=hyperparams.squeeze_factor)
             z_mean = float(xp.mean(z))
             z_var = float(xp.var(z))
 

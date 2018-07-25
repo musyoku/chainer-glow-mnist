@@ -64,15 +64,15 @@ def main():
             z_batch = []
             for temperature in temperatures:
                 z = np.random.normal(
-                    0, temperature, size=(
-                        3,
-                    ) + hyperparams.image_size).astype("float32")
+                    0, temperature,
+                    size=(1, ) + hyperparams.image_size).astype("float32")
                 z_batch.append(z)
             z_batch = np.asanyarray(z_batch)
             if using_gpu:
                 z_batch = cuda.to_gpu(z_batch)
             x, _ = decoder(z_batch)
-            for n, (temperature, subplot) in enumerate(zip(temperatures, subplots)):
+            for n, (temperature, subplot) in enumerate(
+                    zip(temperatures, subplots)):
                 x_img = make_uint8(x.data[n], num_bins_x)
                 subplot.imshow(x_img, interpolation="none")
                 subplot.set_title("temperature={}".format(temperature))
