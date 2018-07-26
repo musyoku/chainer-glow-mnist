@@ -8,6 +8,7 @@ class Hyperparameters():
         self.depth_per_level = 32
         self.levels = 6
         self.num_bits_x = 8
+        self.num_image_channels = 1
         self.squeeze_factor = 2
         self.nn_hidden_channels = 512
         self.image_size = (256, 256)
@@ -38,6 +39,7 @@ class Hyperparameters():
                     "num_bits_x": self.num_bits_x,
                     "image_size": self.image_size,
                     "lu_decomposition": self.lu_decomposition,
+                    "num_image_channels": self.num_image_channels,
                 },
                 f,
                 indent=4,
@@ -52,5 +54,6 @@ class Hyperparameters():
                 ["nn_hidden_channels", self.nn_hidden_channels],
                 ["image_size", self.image_size],
                 ["lu_decomposition", self.lu_decomposition],
+                ["num_image_channels", self.num_image_channels],
                 ["num_bits_x", self.num_bits_x],
             ]))

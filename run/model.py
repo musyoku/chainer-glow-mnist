@@ -183,7 +183,7 @@ class Glow(chainer.ChainList):
         self.blocks = []
         self.need_initialize = True
 
-        channels_x = 1  # grayscale
+        channels_x = hyperparams.num_image_channels
 
         for level in range(hyperparams.levels):
             if level == 0:

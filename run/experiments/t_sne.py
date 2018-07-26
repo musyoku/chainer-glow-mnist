@@ -70,10 +70,13 @@ def main():
         labels.append(label)
     labels = np.asarray(labels)
     images = 255.0 * np.asarray(images).reshape((-1, ) + image_size + (1, ))
+    if hyperparams.num_image_channels != 1:
+        images = np.broadcast_to(images, (images.shape[0], ) + image_size +
+                                 (hyperparams.num_image_channels, ))
     images = preprocess(images, hyperparams.num_bits_x)
 
-    # images = images[:2000]
-    # labels = labels[:2000]
+    # images = images[:200]
+    # labels = labels[:200]
 
     sections = len(images) // 100
     dataset_image = np.split(images, sections)
@@ -97,11 +100,12 @@ def main():
 
             z = encoder.merge_factorized_z(
                 factorized_z, factor=hyperparams.squeeze_factor)
-            z = z.reshape((-1, 28 * 28))
+            z = z.reshape((-1, hyperparams.num_image_channels * 28 * 28))
             z = to_cpu(z)
             t_sne_inputs.append(z)
 
-    t_sne_inputs = np.asanyarray(t_sne_inputs).reshape((-1, 28 * 28))
+    t_sne_inputs = np.asanyarray(t_sne_inputs).reshape(
+        (-1, hyperparams.num_image_channels * 28 * 28))
     print(t_sne_inputs.shape)
 
     z_reduced = TSNE(
@@ -109,7 +113,7 @@ def main():
     print(z_reduced.shape)
 
     plt.scatter(
-        z_reduced[:, 0], z_reduced[:, 1], c=labels, s=10, cmap="Spectral")
+        z_reduced[:, 0], z_reduced[:, 1], c=labels, s=5, cmap="Spectral")
     plt.colorbar()
     plt.savefig("scatter.png")
 

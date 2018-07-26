@@ -86,7 +86,9 @@ def main():
 
     images = chainer.datasets.mnist.get_mnist(withlabel=False)[0]
     images = 255.0 * np.asarray(images).reshape((-1, ) + image_size + (1, ))
-    # images = np.broadcast_to(images, (images.shape[0], ) + image_size + (3, ))
+    if args.num_channels != 1:
+        images = np.broadcast_to(
+            images, (images.shape[0], ) + image_size + (args.num_channels, ))
     images = preprocess(images, args.num_bits_x)
 
     x_mean = np.mean(images)
@@ -108,6 +110,7 @@ def main():
     hyperparams.image_size = image_size
     hyperparams.num_bits_x = args.num_bits_x
     hyperparams.lu_decomposition = args.lu_decomposition
+    hyperparams.num_image_channels = args.num_channels
     hyperparams.save(args.snapshot_path)
     hyperparams.print()
 
@@ -126,10 +129,7 @@ def main():
             break
 
     current_training_step = 0
-    num_pixels = hyperparams.image_size[0] * hyperparams.image_size[1]
-
-    # for key, variable in encoder.namedparams():
-    #     print(key, xp.mean(variable.data), xp.var(variable.data))
+    num_pixels = args.num_channels * hyperparams.image_size[0] * hyperparams.image_size[1]
 
     # Training loop
     for iteration in range(args.total_iteration):
@@ -191,6 +191,7 @@ if __name__ == "__main__":
     parser.add_argument("--levels", "-levels", type=int, default=5)
     parser.add_argument("--nn-hidden-channels", "-nn", type=int, default=512)
     parser.add_argument("--num-bits-x", "-bits", type=int, default=8)
+    parser.add_argument("--num-channels", "-channels", type=int, default=3)
     parser.add_argument("--lu-decomposition", "-lu", action="store_true")
     args = parser.parse_args()
     main()
