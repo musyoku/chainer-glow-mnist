@@ -1,5 +1,3 @@
-# :construction: Work in Progress :construction:
-
 [Glow: Generative Flow with Invertible 1×1 Convolutions](https://arxiv.org/abs/1807.03039)
 
 # Usage
@@ -17,3 +15,23 @@ python3 train.py -levels 2 -depth 16 -nn 64 -b 128 -bits 5 -iter 1000 -channels 
 cd run/experiments
 python3 t_sne.py -snapshot ../snapshot
 ```
+
+![scatter.png](https://qiita-image-store.s3.amazonaws.com/0/109322/0cbf77ad-5b71-adfe-a940-eaa24a81890f.png)
+
+## Interpolation
+
+```
+cd run/experiments
+python3 t_sne.py -snapshot ../snapshot
+```
+
+![interpolation.png](https://qiita-image-store.s3.amazonaws.com/0/109322/5b5368ee-7e3e-a03b-0381-333520c5f5d6.png)
+
+## Generate images
+
+```
+cd run/experiments
+python3 generate.py -snapshot ../snapshot
+```
+
+![mnist.gif](https://qiita-image-store.s3.amazonaws.com/0/109322/2294b41b-1f69-e88e-d80f-08e4fbbedf8d.gif)
