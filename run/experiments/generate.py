@@ -52,9 +52,11 @@ def main():
     with chainer.no_backprop_mode() and encoder.reverse() as decoder:
         while True:
             z = xp.random.normal(
-                0, args.temperature, size=(
+                0,
+                args.temperature,
+                size=(
                     1,
-                    1,
+                    hyperparams.num_image_channels,
                 ) + hyperparams.image_size).astype("float32")
 
             x, _ = decoder.reverse_step(z)

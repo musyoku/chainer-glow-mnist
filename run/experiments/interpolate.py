@@ -7,11 +7,9 @@ import chainer.functions as cf
 import cupy
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 from chainer.backends import cuda
 from tabulate import tabulate
-from sklearn.manifold import TSNE
 
 sys.path.append(os.path.join("..", ".."))
 import glow
@@ -61,68 +59,72 @@ def main():
     num_bins_x = 2.0**hyperparams.num_bits_x
     image_size = (28, 28)
 
-    _, test = chainer.datasets.mnist.get_mnist()
-    images = []
-    labels = []
-    for entity in test:
-        image, label = entity
-        images.append(image)
-        labels.append(label)
-    labels = np.asarray(labels)
+    images = chainer.datasets.mnist.get_mnist(withlabel=False)[0]
     images = 255.0 * np.asarray(images).reshape((-1, ) + image_size + (1, ))
     if hyperparams.num_image_channels != 1:
         images = np.broadcast_to(images, (images.shape[0], ) + image_size +
                                  (hyperparams.num_image_channels, ))
     images = preprocess(images, hyperparams.num_bits_x)
 
-    # images = images[:200]
-    # labels = labels[:200]
+    dataset = glow.dataset.Dataset(images)
+    iterator = glow.dataset.Iterator(dataset, batch_size=2)
 
-    sections = len(images) // 100
-    dataset_image = np.split(images, sections)
+    print(tabulate([["#image", len(dataset)]]))
 
     encoder = Glow(hyperparams, hdf5_path=args.snapshot_path)
     if using_gpu:
         encoder.to_gpu()
 
-    fig = plt.figure(figsize=(8, 8))
-    t_sne_inputs = []
+    total = args.num_steps + 2
+    fig = plt.figure(figsize=(4 * total, 4))
+    subplots = []
+    for n in range(total):
+        subplot = fig.add_subplot(1, total, n + 1)
+        subplots.append(subplot)
 
-    with chainer.no_backprop_mode():
-        for n, image_batch in enumerate(dataset_image):
-            x = to_gpu(image_batch)
-            x += xp.random.uniform(0, 1.0 / num_bins_x, size=x.shape)
-            factorized_z_distribution, _ = encoder.forward_step(x)
+    with chainer.no_backprop_mode() and encoder.reverse() as decoder:
+        while True:
+            for data_indices in iterator:
+                x = to_gpu(dataset[data_indices])
+                x += xp.random.uniform(0, 1.0 / num_bins_x, size=x.shape)
+                factorized_z_distribution, _ = encoder.forward_step(x)
 
-            factorized_z = []
-            for (zi, mean, ln_var) in factorized_z_distribution:
-                factorized_z.append(zi)
+                factorized_z = []
+                for (zi, mean, ln_var) in factorized_z_distribution:
+                    factorized_z.append(zi)
 
-            z = encoder.merge_factorized_z(
-                factorized_z, factor=hyperparams.squeeze_factor)
-            z = z.reshape((-1, hyperparams.num_image_channels * 28 * 28))
-            z = to_cpu(z)
-            t_sne_inputs.append(z)
+                z = encoder.merge_factorized_z(factorized_z)
+                z_start = z[0]
+                z_end = z[1]
 
-    t_sne_inputs = np.asanyarray(t_sne_inputs).reshape(
-        (-1, hyperparams.num_image_channels * 28 * 28))
-    print(t_sne_inputs.shape)
+                z_batch = [z_start]
+                for n in range(args.num_steps):
+                    ratio = n / (args.num_steps - 1)
+                    z_interp = ratio * z_end + (1.0 - ratio) * z_start
+                    z_batch.append(z_interp)
+                z_batch.append(z_end)
+                z_batch = xp.stack(z_batch)
 
-    z_reduced = TSNE(
-        n_components=2, random_state=0).fit_transform(t_sne_inputs)
-    print(z_reduced.shape)
+                rev_x_batch, _ = decoder.reverse_step(z_batch)
+                for n in range(args.num_steps):
+                    rev_x_img = make_uint8(rev_x_batch.data[n + 1], num_bins_x)
+                    subplots[n + 1].imshow(rev_x_img, interpolation="none")
 
-    plt.scatter(
-        z_reduced[:, 0], z_reduced[:, 1], c=labels, s=1, cmap="Spectral")
-    plt.colorbar()
-    plt.savefig("scatter.png")
+
+                x_start_img = make_uint8(x[0], num_bins_x)
+                subplots[0].imshow(x_start_img, interpolation="none")
+
+                x_end_img = make_uint8(x[-1], num_bins_x)
+                subplots[-1].imshow(x_end_img, interpolation="none")
+
+                plt.pause(.01)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--snapshot-path", "-snapshot", type=str, required=True)
-    parser.add_argument("--temperature", type=float, default=0.7)
+    parser.add_argument("--num-steps", "-steps", type=int, default=5)
     parser.add_argument("--gpu-device", "-gpu", type=int, default=0)
     args = parser.parse_args()
     main()
