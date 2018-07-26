@@ -101,7 +101,7 @@ def main():
                 for n in range(args.num_steps):
                     ratio = n / (args.num_steps - 1)
                     z_interp = ratio * z_end + (1.0 - ratio) * z_start
-                    z_batch.append(z_interp)
+                    z_batch.append(args.temperature * z_interp)
                 z_batch.append(z_end)
                 z_batch = xp.stack(z_batch)
 
@@ -109,7 +109,6 @@ def main():
                 for n in range(args.num_steps):
                     rev_x_img = make_uint8(rev_x_batch.data[n + 1], num_bins_x)
                     subplots[n + 1].imshow(rev_x_img, interpolation="none")
-
 
                 x_start_img = make_uint8(x[0], num_bins_x)
                 subplots[0].imshow(x_start_img, interpolation="none")
@@ -125,6 +124,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--snapshot-path", "-snapshot", type=str, required=True)
     parser.add_argument("--num-steps", "-steps", type=int, default=5)
+    parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--gpu-device", "-gpu", type=int, default=0)
     args = parser.parse_args()
     main()
