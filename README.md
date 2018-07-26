@@ -22,7 +22,7 @@ python3 t_sne.py -snapshot ../snapshot
 
 ```
 cd run/experiments
-python3 t_sne.py -snapshot ../snapshot
+python3 interpolation.py -snapshot ../snapshot
 ```
 
 ![interpolation.png](https://qiita-image-store.s3.amazonaws.com/0/109322/f4dd093c-c8c5-9759-ffbd-26e83286a76b.png)
