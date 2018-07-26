@@ -61,6 +61,9 @@ def main():
 
     images = chainer.datasets.mnist.get_mnist(withlabel=False)[0]
     images = 255.0 * np.asarray(images).reshape((-1, ) + image_size + (1, ))
+    if hyperparams.num_image_channels != 1:
+        images = np.broadcast_to(images, (images.shape[0], ) + image_size +
+                                 (hyperparams.num_image_channels, ))
     images = preprocess(images, hyperparams.num_bits_x)
 
     dataset = glow.dataset.Dataset(images)
@@ -92,9 +95,6 @@ def main():
                 #         0, 0.2, size=zi.shape).astype("float32")
                 #     zi.data += noise
                 rev_x, _ = decoder.reverse_step(factorized_z)
-                print(
-                    xp.mean(x), xp.std(x), " ->", xp.mean(rev_x.data),
-                    xp.std(rev_x.data))
 
                 x_img = make_uint8(x[0], num_bins_x)
                 rev_x_img = make_uint8(rev_x.data[0], num_bins_x)
