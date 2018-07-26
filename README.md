@@ -7,6 +7,13 @@ cd run
 python3 train.py -levels 2 -depth 16 -nn 64 -b 128 -bits 5 -iter 1000 -channels 3 -snapshot snapshot
 ```
 
+# Requirements
+
+- Python 3
+- Chainer 4
+- python-tabulate
+- scipy
+
 # Experiments
 
 ## t-SNE
