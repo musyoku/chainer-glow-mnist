@@ -175,7 +175,7 @@ def main():
         print(
             "\033[2KIteration {} - loss: {:.5f} - log_likelihood: {:.5f} - elapsed_time: {:.3f} min".
             format(iteration + 1, sum_loss / len(iterator), log_likelihood,
-                   elapsed_time / 60))
+                elapsed_time / 60))
         encoder.save(args.snapshot_path)
 
 
