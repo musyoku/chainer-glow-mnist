@@ -25,7 +25,7 @@ cd run/experiments
 python3 t_sne.py -snapshot ../snapshot
 ```
 
-![interpolation.png](https://qiita-image-store.s3.amazonaws.com/0/109322/5b5368ee-7e3e-a03b-0381-333520c5f5d6.png)
+![interpolation.png](https://qiita-image-store.s3.amazonaws.com/0/109322/f4dd093c-c8c5-9759-ffbd-26e83286a76b.png)
 
 ## Generate images
 

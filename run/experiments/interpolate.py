@@ -124,7 +124,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--snapshot-path", "-snapshot", type=str, required=True)
     parser.add_argument("--num-steps", "-steps", type=int, default=5)
-    parser.add_argument("--temperature", type=float, default=0.7)
+    parser.add_argument("--temperature", "-temp", type=float, default=0.5)
     parser.add_argument("--gpu-device", "-gpu", type=int, default=0)
     args = parser.parse_args()
     main()
