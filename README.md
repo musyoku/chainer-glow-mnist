@@ -14,6 +14,13 @@ python3 train.py -levels 2 -depth 16 -nn 64 -b 128 -bits 5 -iter 1000 -channels 
 - python-tabulate
 - scipy
 
+# Installation
+
+```
+pip3 install chainer cupy h5py
+pip3 install tabulate
+```
+
 # Experiments
 
 ## t-SNE
